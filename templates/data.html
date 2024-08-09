@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refacciones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0B2545;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .navbar {
+            background-color: #1B1B2F;
+            width: 200px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            border-radius: 10px;
+            margin: 20px;
+            height: calc(100vh - 40px);
+        }
+        .navbar a {
+            color: #E94560;
+            text-decoration: none;
+            padding: 10px;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+            border-radius: 5px;
+            background-color: #162447;
+        }
+        .navbar a:hover {
+            background-color: #E94560;
+            color: #FFFFFF;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            margin-left: 20px; /* Ajuste del margen izquierdo */
+        }
+        h2 {
+            text-align: center;
+            padding: 20px;
+            background-color: #162447;
+            width: 100%;
+            margin: 0;
+            border-bottom: 2px solid #E94560;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            width: 80%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .search-bar select,
+        .search-bar input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 2px solid #E94560;
+            background-color: #1F4068;
+            color: #FFFFFF;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar select {
+            margin-right: 10px;
+        }
+
+        .search-bar input::placeholder {
+            color: #888;
+        }
+        
+        .search-bar input:focus {
+            border-color: #FFFFFF;
+            background-color: #162447;
+        }
+
+        .record-container {
+            background-color: #1F4068;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 80%;
+            position: relative; /* Para posicionar los botones */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #1B1B2F;
+            width: 20%;
+        }
+        td {
+            background-color: #162447;
+        }
+        .record-container tr:nth-child(even) td {
+            background-color: #1F4068;
+        }
+        .record-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .description {
+            background-color: #1B1B2F;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .delete-button, .modify-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #E94560;
+            color: #FFFFFF;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modify-button {
+            right: 150px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #1F4068;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #888;
+        }
+        button {
+            background-color: #E94560;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #162447;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/insertar_data">Insertar Nuevo</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/">Logout</a>
+    </div>
+    <div class="main-content">
+        <h2>Refacciones</h2>
+        <div class="content">
+            <div class="search-bar">
+                <label for="filter-category">Filtrar por:</label>
+                <select id="filter-category" onchange="updateFilterInput()">
+                    <option value="NUMERO_DE_PARTE">Número de Parte</option>
+                    <option value="DESCRIPCION">Descripción</option>
+                    <option value="COSTO_LISTA">Costo Lista</option>
+                    <option value="COSTO_INSTALACION">Costo Instalación</option>
+                    <option value="TOTAL_CON_IVA">Total con IVA</option>
+                    <option value="CUMPLE">Cumple</option>
+                </select>
+                <div class="search-bar" id="filter-input-container">
+                    <input type="text" id="filter-input" onkeyup="applyFilter()" placeholder="Ingrese el valor a filtrar">
+                </div>
+            </div>
+            {% for refaccion in refacciones %}
+            <div class="record-container" data-id="{{ refaccion.ID }}">
+                <button class="delete-button" onclick="eliminarRegistro(this)">Eliminar Registro</button>
+                <button class="modify-button" onclick="mostrarModalModificar(this)">Modificar Registro</button>
+                <table>
+                    <tr>
+                        <th>NUMERO DE PARTE</th>
+                        <td>{{ refaccion.NUMERO_DE_PARTE }}</td>
+                    </tr>
+                    <tr>
+                        <th>DESCRIPCION</th>
+                        <td>{{ refaccion.DESCRIPCION }}</td>
+                    </tr>
+                    <tr>
+                        <th>COSTO LISTA</th>
+                        <td>{{ refaccion.COSTO_LISTA }}</td>
+                    </tr>
+                    <tr>
+                        <th>COSTO INSTALACION</th>
+                        <td>{{ refaccion.COSTO_INSTALACION }}</td>
+                    </tr>
+                    <tr>
+                        <th>TOTAL CON IVA</th>
+                        <td>{{ refaccion.TOTAL_CON_IVA }}</td>
+                    </tr>
+                    <tr>
+                        <th>CUMPLE</th>
+                        <td>{{ refaccion.CUMPLE }}</td>
+                    </tr>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modalModificar" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <h2>Modificar Registro</h2>
+            <form id="formModificar" onsubmit="submitModificar(event)">
+                <input type="hidden" id="modificarID">
+                <label for="modificarNumParte">Número de Parte</label>
+                <input type="text" id="modificarNumParte" name="numero_parte" required>
+                <label for="modificarDescripcion">Descripción</label>
+                <input type="text" id="modificarDescripcion" name="descripcion" required>
+                <label for="modificarCostoLista">Costo Lista</label>
+                <input type="number" step="0.01" id="modificarCostoLista" name="costo_lista" required>
+                <label for="modificarCostoInstalacion">Costo Instalación</label>
+                <input type="number" step="0.01" id="modificarCostoInstalacion" name="costo_instalacion" required>
+                <label for="modificarTotalIVA">Total con IVA</label>
+                <input type="number" step="0.01" id="modificarTotalIVA" name="total_iva" required>
+                <label for="modificarCumple">Cumple</label>
+                <input type="text" id="modificarCumple" name="cumple" required>
+                <button type="submit">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Función para aplicar el filtro según la categoría seleccionada
+        function applyFilter() {
+            var filterCategory = document.getElementById('filter-category').value;
+            var filterValue = document.getElementById('filter-input').value.toUpperCase();
+            var recordContainers = document.querySelectorAll('.record-container');
+
+            recordContainers.forEach(function(container) {
+                var textToFilter = container.querySelector('td:nth-child(2)').textContent.toUpperCase();
+                
+                if (filterCategory === 'DESCRIPCION') {
+                    textToFilter = container.querySelector('td:nth-child(2)').textContent.toUpperCase();
+                }
+
+                if (textToFilter.indexOf(filterValue) > -1) {
+                    container.style.display = '';
+                } else {
+                    container.style.display = 'none';
+                }
+            });
+        }
+
+        // Actualizar el tipo de filtro de entrada (input) basado en la categoría seleccionada
+        function updateFilterInput() {
+            var filterCategory = document.getElementById('filter-category').value;
+            var filterInputContainer = document.getElementById('filter-input-container');
+
+            if (filterCategory === 'NUMERO_DE_PARTE' || filterCategory === 'DESCRIPCION') {
+                filterInputContainer.innerHTML = '<input type="text" id="filter-input" onkeyup="applyFilter()" placeholder="Ingrese el valor a filtrar">';
+            } else {
+                filterInputContainer.innerHTML = '<input type="number" id="filter-input" onkeyup="applyFilter()" placeholder="Ingrese el valor a filtrar">';
+            }
+        }
+
+        // Eliminar registro
+        function eliminarRegistro(button) {
+            var recordContainer = button.closest('.record-container');
+            var id = recordContainer.dataset.id;
+            // Aquí puedes implementar la lógica para eliminar el registro utilizando el ID
+            console.log('Eliminar registro con ID:', id);
+            recordContainer.remove(); // Simulación de eliminación visual
+        }
+
+        // Mostrar modal para modificar registro
+        function mostrarModalModificar(button) {
+            var recordContainer = button.closest('.record-container');
+            var id = recordContainer.dataset.id;
+            var numeroParte = recordContainer.querySelector('td:nth-child(2)').textContent;
+            var descripcion = recordContainer.querySelector('td:nth-child(4)').textContent;
+            var costoLista = recordContainer.querySelector('td:nth-child(6)').textContent;
+            var costoInstalacion = recordContainer.querySelector('td:nth-child(8)').textContent;
+            var totalIVA = recordContainer.querySelector('td:nth-child(10)').textContent;
+            var cumple = recordContainer.querySelector('td:nth-child(12)').textContent;
+
+            document.getElementById('modificarID').value = id;
+            document.getElementById('modificarNumParte').value = numeroParte;
+            document.getElementById('modificarDescripcion').value = descripcion;
+            document.getElementById('modificarCostoLista').value = costoLista;
+            document.getElementById('modificarCostoInstalacion').value = costoInstalacion;
+            document.getElementById('modificarTotalIVA').value = totalIVA;
+            document.getElementById('modificarCumple').value = cumple;
+
+            var modal = document.getElementById('modalModificar');
+            modal.style.display = 'block';
+        }
+
+        // Cerrar modal de modificar registro
+        function cerrarModal() {
+            var modal = document.getElementById('modalModificar');
+            modal.style.display = 'none';
+        }
+
+        // Guardar cambios al modificar registro
+        function submitModificar(event) {
+            event.preventDefault();
+            var id = document.getElementById('modificarID').value;
+            var numeroParte = document.getElementById('modificarNumParte').value;
+            var descripcion = document.getElementById('modificarDescripcion').value;
+            var costoLista = document.getElementById('modificarCostoLista').value;
+            var costoInstalacion = document.getElementById('modificarCostoInstalacion').value;
+            var totalIVA = document.getElementById('modificarTotalIVA').value;
+            var cumple = document.getElementById('modificarCumple').value;
+
+            // Aquí deberías enviar los datos modificados al servidor o realizar la actualización necesaria en la interfaz
+            console.log('Guardar cambios para el registro con ID:', id);
+            
+            // Cerrar modal después de guardar cambios
+            cerrarModal();
+        }
+    </script>
+</body>
+</html>

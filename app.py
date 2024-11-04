@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -40,6 +40,9 @@ def create_ref_table():
     conn.commit()
     conn.close()
 
+def alert_message(message, redirect_url='/'):
+    return f"<script>alert('{message}'); window.location.href='{redirect_url}';</script>"
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -48,8 +51,8 @@ def register():
         password = request.form['password']
         
         if not username or not email or not password:
-            return jsonify({"message": "All fields are required"}), 400
-        
+            return alert_message("Todos los campos son obligatorios.")
+
         hashed_password = generate_password_hash(password)
         
         try:
@@ -59,9 +62,9 @@ def register():
                            (username, email, hashed_password))
             conn.commit()
             conn.close()
-            return redirect(url_for('login'))
+            return alert_message("Registro exitoso. Redirigiendo al inicio de sesión...", '/')
         except sqlite3.IntegrityError:
-            return jsonify({"message": "Username or email already exists"}), 400
+            return alert_message("El nombre de usuario o correo ya existe.")
     return render_template('register.html')
 
 @app.route('/', methods=['GET', 'POST'])
@@ -71,8 +74,8 @@ def login():
         password = request.form['password']
         
         if not email or not password:
-            return jsonify({"message": "Email and password are required"}), 400
-        
+            return alert_message("El correo y la contraseña son obligatorios.")
+
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
@@ -80,9 +83,9 @@ def login():
         conn.close()
         
         if user and check_password_hash(user[3], password):
-            return redirect(url_for('data'))
+            return alert_message("Inicio de sesión exitoso. Redirigiendo...", '/data')
         else:
-            return jsonify({"message": "Invalid email or password"}), 401
+            return alert_message("Correo o contraseña incorrectos.")
     
     return render_template('login.html')
 
@@ -93,22 +96,67 @@ def data():
     cursor.execute("SELECT * FROM refacciones")
     refacciones = cursor.fetchall()
     conn.close()
-    
+
     refacciones_array = [{"ID": refaccion[0], "NUMERO_DE_PARTE": refaccion[1], "DESCRIPCION": refaccion[2], "COSTO_LISTA": refaccion[3], "COSTO_INSTALACION": refaccion[4], "TOTAL_CON_IVA": refaccion[5], "CUMPLE": refaccion[6]} for refaccion in refacciones]
 
     return render_template('data.html', refacciones=refacciones_array)
 
-@app.route('/eliminar_registro/<int:id>', methods=['POST'])
-def eliminar_registro(id):
+@app.route('/modificar/<int:id>', methods=['PUT'])
+def modificar_registro(id):
+    data = request.form
+    numero_parte = data.get('numero_parte')
+    descripcion = data.get('descripcion')
+    costo_lista = data.get('costo_lista')
+    costo_instalacion = data.get('costo_instalacion')
+    total_iva = data.get('total_iva')
+    cumple = data.get('cumple')
+
+    # Aquí deberías agregar la lógica para modificar el registro en la base de datos
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM refacciones WHERE ID = ?", (id,))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('data'))
-    except:
-        return jsonify({"message": "Error al eliminar el registro"}), 500
+        # Supongamos que tienes una función llamada `actualizar_registro` para modificar el registro
+        with DATABASE.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('''
+                UPDATE refacciones SET
+                    NUMERO_DE_PARTE = %s,
+                    DESCRIPCION = %s,
+                    COSTO_LISTA = %s,
+                    COSTO_INSTALACION = %s,
+                    TOTAL_CON_IVA = %s,
+                    CUMPLE = %s
+                WHERE ID = %s
+            ''', (numero_parte, descripcion, costo_lista, costo_instalacion, total_iva, cumple, id))
+            connection.commit()
+
+        return alert_message("Registro modificado con éxito")
+    except Exception as e:
+        return alert_message(f"Error al modificar el registro: {str(e)}")
+
+@app.route('/eliminar', methods=['POST'])
+def eliminar_registro():
+    try:
+        # Obtener el ID del registro desde el cuerpo de la solicitud
+        data = request.get_json()  # Se espera que el cuerpo sea en formato JSON
+        id = data.get('id')  # Obtener el ID
+
+        if id is None:
+            return alert_message("ID no proporcionado")
+
+        with DATABASE.connection() as connection:
+            cursor = connection.cursor()
+            # Verificar si el registro existe antes de intentar eliminarlo
+            cursor.execute('SELECT * FROM refacciones WHERE ID = %s', (id,))
+            if cursor.fetchone() is None:
+                return alert_message("Registro no encontrado")
+            
+            # Intentar eliminar el registro
+            cursor.execute('DELETE FROM refacciones WHERE ID = %s', (id,))
+            connection.commit()
+
+        return alert_message("Registro eliminado con éxito")
+    except Exception as e:
+        return alert_message(f"Error al eliminar el registro: {str(e)}")
+
 
 @app.route('/insertar_data', methods=['GET', 'POST'])
 def insertar():
@@ -121,7 +169,7 @@ def insertar():
         CUMPLE = request.form['cumple']
 
         if not NUMERO_DE_PARTE or not DESCRIPCION or not COSTO_LISTA or not COSTO_INSTALACION or not TOTAL_CON_IVA or not CUMPLE:
-            return jsonify({"message": "All fields are required"}), 400
+            return alert_message("Todos los campos son obligatorios.")
          
         try:
             conn = get_db()
@@ -130,39 +178,12 @@ def insertar():
                            (NUMERO_DE_PARTE, DESCRIPCION, COSTO_LISTA, COSTO_INSTALACION, TOTAL_CON_IVA, CUMPLE))
             conn.commit()
             conn.close()
-            return redirect(url_for('insertar'))
+            return alert_message("Registro insertado correctamente.", '/insertar_data')
         except sqlite3.IntegrityError:
-            return jsonify({"message": "datos ya ingresados"}), 400
+            return alert_message("Los datos ya existen.")
     return render_template('insertar.html')
 
-@app.route('/modificar_registro/<int:id>', methods=['POST'])
-def modificar_registro(id):
-    data = request.json
-    NUMERO_DE_PARTE = data.get('numero_parte')
-    DESCRIPCION = data.get('descripcion')
-    COSTO_LISTA = data.get('costo_lista')
-    COSTO_INSTALACION = data.get('costo_instalacion')
-    TOTAL_CON_IVA = data.get('total_iva')
-    CUMPLE = data.get('cumple')
-
-    if not NUMERO_DE_PARTE or not DESCRIPCION or not COSTO_LISTA or not COSTO_INSTALACION or not TOTAL_CON_IVA or not CUMPLE:
-        return jsonify({"message": "All fields are required"}), 400
-
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE refacciones
-            SET NUMERO_DE_PARTE = ?, DESCRIPCION = ?, COSTO_LISTA = ?, COSTO_INSTALACION = ?, TOTAL_CON_IVA = ?, CUMPLE = ?
-            WHERE ID = ?
-        ''', (NUMERO_DE_PARTE, DESCRIPCION, COSTO_LISTA, COSTO_INSTALACION, TOTAL_CON_IVA, CUMPLE, id))
-        conn.commit()
-        conn.close()
-        return jsonify({"message": "Registro modificado exitosamente"}), 200
-    except:
-        return jsonify({"message": "Error al modificar el registro"}), 500
-
-@app.route('/dashboard',methods=['GET'])
+@app.route('/dashboard', methods=['GET'])
 def dashboard():
     conn = get_db()
     cursor = conn.cursor()

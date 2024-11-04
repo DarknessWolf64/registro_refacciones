@@ -46,7 +46,7 @@
             align-items: center;
             justify-content: flex-start;
             padding: 20px;
-            margin-left: 20px; /* Ajuste del margen izquierdo */
+            margin-left: 20px;
         }
         h2 {
             text-align: center;
@@ -63,7 +63,6 @@
             padding: 20px;
             width: 100%;
         }
-
         .search-bar {
             margin-bottom: 20px;
             width: 80%;
@@ -71,7 +70,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .search-bar select,
         .search-bar input {
             width: 100%;
@@ -84,11 +82,9 @@
             outline: none;
             transition: all 0.3s ease;
         }
-
         .search-bar select {
             margin-right: 10px;
         }
-
         .search-bar input::placeholder {
             color: #888;
         }
@@ -97,7 +93,6 @@
             border-color: #FFFFFF;
             background-color: #162447;
         }
-
         .record-container {
             background-color: #1F4068;
             border-radius: 10px;
@@ -124,11 +119,6 @@
         .record-container tr:nth-child(even) td {
             background-color: #1F4068;
         }
-        .record-container img {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-        }
         .description {
             background-color: #1B1B2F;
             padding: 10px;
@@ -148,38 +138,6 @@
         }
         .modify-button {
             right: 150px;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            padding-top: 60px;
-        }
-        .modal-content {
-            background-color: #1F4068;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            border-radius: 10px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
         }
         label {
             display: block;
@@ -232,135 +190,126 @@
             {% for refaccion in refacciones %}
             <div class="record-container" data-id="{{ refaccion.ID }}">
                 <button class="delete-button" onclick="eliminarRegistro(this)">Eliminar Registro</button>
-                <button class="modify-button" onclick="mostrarModalModificar(this)">Modificar Registro</button>
+                <button class="modify-button" onclick="toggleModificar(this)">Modificar Registro</button>
                 <table>
                     <tr>
                         <th>NUMERO DE PARTE</th>
-                        <td>{{ refaccion.NUMERO_DE_PARTE }}</td>
+                        <td class="num-parte">{{ refaccion.NUMERO_DE_PARTE }}</td>
                     </tr>
                     <tr>
                         <th>DESCRIPCION</th>
-                        <td>{{ refaccion.DESCRIPCION }}</td>
+                        <td class="descripcion">{{ refaccion.DESCRIPCION }}</td>
                     </tr>
                     <tr>
                         <th>COSTO LISTA</th>
-                        <td>{{ refaccion.COSTO_LISTA }}</td>
+                        <td class="costo-lista">{{ refaccion.COSTO_LISTA }}</td>
                     </tr>
                     <tr>
                         <th>COSTO INSTALACION</th>
-                        <td>{{ refaccion.COSTO_INSTALACION }}</td>
+                        <td class="costo-instalacion">{{ refaccion.COSTO_INSTALACION }}</td>
                     </tr>
                     <tr>
                         <th>TOTAL CON IVA</th>
-                        <td>{{ refaccion.TOTAL_CON_IVA }}</td>
+                        <td class="total-iva">{{ refaccion.TOTAL_CON_IVA }}</td>
                     </tr>
                     <tr>
                         <th>CUMPLE</th>
-                        <td>{{ refaccion.CUMPLE }}</td>
+                        <td class="cumple">{{ refaccion.CUMPLE }}</td>
                     </tr>
                 </table>
+                <div class="modificar-form" style="display:none;">
+                    <h3>Modificar Registro</h3>
+                    <form onsubmit="submitModificar(event, '{{ refaccion.ID }}', this)">
+                        <label for="modificarNumParte_{{ refaccion.ID }}">Número de Parte</label>
+                        <input type="text" id="modificarNumParte_{{ refaccion.ID }}" name="numero_parte" value="{{ refaccion.NUMERO_DE_PARTE }}" required>
+                        <label for="modificarDescripcion_{{ refaccion.ID }}">Descripción</label>
+                        <input type="text" id="modificarDescripcion_{{ refaccion.ID }}" name="descripcion" value="{{ refaccion.DESCRIPCION }}" required>
+                        <label for="modificarCostoLista_{{ refaccion.ID }}">Costo Lista</label>
+                        <input type="number" step="0.01" id="modificarCostoLista_{{ refaccion.ID }}" name="costo_lista" value="{{ refaccion.COSTO_LISTA }}" required>
+                        <label for="modificarCostoInstalacion_{{ refaccion.ID }}">Costo Instalación</label>
+                        <input type="number" step="0.01" id="modificarCostoInstalacion_{{ refaccion.ID }}" name="costo_instalacion" value="{{ refaccion.COSTO_INSTALACION }}" required>
+                        <label for="modificarTotalIVA_{{ refaccion.ID }}">Total con IVA</label>
+                        <input type="number" step="0.01" id="modificarTotalIVA_{{ refaccion.ID }}" name="total_iva" value="{{ refaccion.TOTAL_CON_IVA }}" required>
+                        <label for="modificarCumple_{{ refaccion.ID }}">Cumple</label>
+                        <input type="text" id="modificarCumple_{{ refaccion.ID }}" name="cumple" value="{{ refaccion.CUMPLE }}" required>
+                        <button type="submit">Guardar Cambios</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>
     </div>
-
-    <!-- Modal -->
-    <div id="modalModificar" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="cerrarModal()">&times;</span>
-            <h2>Modificar Registro</h2>
-            <form id="formModificar" onsubmit="submitModificar(event)">
-                <input type="hidden" id="modificarID">
-                <label for="modificarNumParte">Número de Parte</label>
-                <input type="text" id="modificarNumParte" name="numero_parte" required>
-                <label for="modificarDescripcion">Descripción</label>
-                <input type="text" id="modificarDescripcion" name="descripcion" required>
-                <label for="modificarCostoLista">Costo Lista</label>
-                <input type="number" step="0.01" id="modificarCostoLista" name="costo_lista" required>
-                <label for="modificarCostoInstalacion">Costo Instalación</label>
-                <input type="number" step="0.01" id="modificarCostoInstalacion" name="costo_instalacion" required>
-                <label for="modificarTotalConIVA">Total con IVA</label>
-                <input type="number" step="0.01" id="modificarTotalConIVA" name="total_con_iva" required>
-                <label for="modificarCumple">Cumple</label>
-                <input type="text" id="modificarCumple" name="cumple" required>
-                <button type="submit">Guardar Cambios</button>
-            </form>
-        </div>
-    </div>
-
     <script>
+        function eliminarRegistro(button) {
+            const recordContainer = button.closest('.record-container');
+            const id = recordContainer.dataset.id;
+            
+            fetch('/eliminar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: id }) // Enviar el ID como JSON
+            }).then(response => {
+                if (response.ok) {
+                    recordContainer.remove();
+                } else {
+                    alert('Error al eliminar el registro.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+        function toggleModificar(button) {
+            const recordContainer = button.closest('.record-container');
+            const modificarForm = recordContainer.querySelector('.modificar-form');
+            modificarForm.style.display = modificarForm.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function submitModificar(event, id, form) {
+            event.preventDefault();
+            const formData = new FormData(form);
+
+            fetch('/modificar/' + id, {
+                method: 'PUT',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    alert('Registro modificado con éxito');
+                    toggleModificar(form); // Ocultar el formulario de modificación
+                    // Actualizar la vista con los nuevos datos
+                    const recordContainer = form.closest('.record-container');
+                    recordContainer.querySelector('.num-parte').textContent = formData.get('numero_parte');
+                    recordContainer.querySelector('.descripcion').textContent = formData.get('descripcion');
+                    recordContainer.querySelector('.costo-lista').textContent = formData.get('costo_lista');
+                    recordContainer.querySelector('.costo-instalacion').textContent = formData.get('costo_instalacion');
+                    recordContainer.querySelector('.total-iva').textContent = formData.get('total_iva');
+                    recordContainer.querySelector('.cumple').textContent = formData.get('cumple');
+                } else {
+                    alert('Error al modificar el registro.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
         function applyFilter() {
             const filterInput = document.getElementById('filter-input').value.toLowerCase();
             const filterCategory = document.getElementById('filter-category').value;
-            const recordContainers = document.querySelectorAll('.record-container');
+            const records = document.querySelectorAll('.record-container');
 
-            recordContainers.forEach(container => {
-                const row = container.querySelector('table');
-                let shouldDisplay = false;
-
-                switch (filterCategory) {
-                    case 'NUMERO_DE_PARTE':
-                        shouldDisplay = row.rows[0].cells[1].textContent.toLowerCase().includes(filterInput);
-                        break;
-                    case 'DESCRIPCION':
-                        shouldDisplay = row.rows[1].cells[1].textContent.toLowerCase().includes(filterInput);
-                        break;
-                    case 'COSTO_LISTA':
-                        shouldDisplay = row.rows[2].cells[1].textContent.toLowerCase().includes(filterInput);
-                        break;
-                    case 'COSTO_INSTALACION':
-                        shouldDisplay = row.rows[3].cells[1].textContent.toLowerCase().includes(filterInput);
-                        break;
-                    case 'TOTAL_CON_IVA':
-                        shouldDisplay = row.rows[4].cells[1].textContent.toLowerCase().includes(filterInput);
-                        break;
-                    case 'CUMPLE':
-                        shouldDisplay = row.rows[5].cells[1].textContent.toLowerCase().includes(filterInput);
-                        break;
-                }
-
-                container.style.display = shouldDisplay ? 'block' : 'none';
+            records.forEach(record => {
+                const textToMatch = record.querySelector(`.${filterCategory.toLowerCase()}`).textContent.toLowerCase();
+                record.style.display = textToMatch.includes(filterInput) ? 'block' : 'none';
             });
         }
 
         function updateFilterInput() {
-            const filterInputContainer = document.getElementById('filter-input-container');
-            filterInputContainer.querySelector('input').value = ''; // Clear the input
-            applyFilter(); // Apply filter to show all records initially
-        }
-
-        function eliminarRegistro(button) {
-            const recordContainer = button.closest('.record-container');
-            const recordId = recordContainer.getAttribute('data-id');
-            // Aquí deberías implementar la lógica para eliminar el registro usando el recordId
-            console.log(`Eliminar registro con ID: ${recordId}`);
-            recordContainer.remove(); // Solo para efecto visual
-        }
-
-        function mostrarModalModificar(button) {
-            const recordContainer = button.closest('.record-container');
-            const cells = recordContainer.querySelectorAll('td');
-
-            document.getElementById('modificarID').value = recordContainer.getAttribute('data-id');
-            document.getElementById('modificarNumParte').value = cells[0].textContent;
-            document.getElementById('modificarDescripcion').value = cells[1].textContent;
-            document.getElementById('modificarCostoLista').value = cells[2].textContent;
-            document.getElementById('modificarCostoInstalacion').value = cells[3].textContent;
-            document.getElementById('modificarTotalConIVA').value = cells[4].textContent;
-            document.getElementById('modificarCumple').value = cells[5].textContent;
-
-            document.getElementById('modalModificar').style.display = 'block';
-        }
-
-        function cerrarModal() {
-            document.getElementById('modalModificar').style.display = 'none';
-        }
-
-        function submitModificar(event) {
-            event.preventDefault();
-            // Aquí deberías implementar la lógica para enviar los datos modificados
-            console.log('Datos modificados enviados');
-            cerrarModal(); // Cierra el modal después de enviar
+            const filterInput = document.getElementById('filter-input');
+            filterInput.value = ''; // Limpiar el input al cambiar la categoría
+            applyFilter(); // Aplicar filtro para mostrar todos
         }
     </script>
 </body>

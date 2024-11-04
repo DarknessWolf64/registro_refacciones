@@ -70,7 +70,6 @@
             justify-content: center;
             align-items: center;
         }
-        .search-bar select,
         .search-bar input {
             width: 100%;
             padding: 10px 20px;
@@ -81,9 +80,6 @@
             font-size: 16px;
             outline: none;
             transition: all 0.3s ease;
-        }
-        .search-bar select {
-            margin-right: 10px;
         }
         .search-bar input::placeholder {
             color: #888;
@@ -99,7 +95,7 @@
             padding: 20px;
             margin-bottom: 20px;
             width: 80%;
-            position: relative; /* Para posicionar los botones */
+            position: relative;
         }
         table {
             width: 100%;
@@ -118,12 +114,6 @@
         }
         .record-container tr:nth-child(even) td {
             background-color: #1F4068;
-        }
-        .description {
-            background-color: #1B1B2F;
-            padding: 10px;
-            border-radius: 10px;
-            margin-top: 10px;
         }
         .delete-button, .modify-button {
             position: absolute;
@@ -174,18 +164,7 @@
         <h2>Refacciones</h2>
         <div class="content">
             <div class="search-bar">
-                <label for="filter-category">Filtrar por:</label>
-                <select id="filter-category" onchange="updateFilterInput()">
-                    <option value="NUMERO_DE_PARTE">Número de Parte</option>
-                    <option value="DESCRIPCION">Descripción</option>
-                    <option value="COSTO_LISTA">Costo Lista</option>
-                    <option value="COSTO_INSTALACION">Costo Instalación</option>
-                    <option value="TOTAL_CON_IVA">Total con IVA</option>
-                    <option value="CUMPLE">Cumple</option>
-                </select>
-                <div class="search-bar" id="filter-input-container">
-                    <input type="text" id="filter-input" onkeyup="applyFilter()" placeholder="Ingrese el valor a filtrar">
-                </div>
+                <input type="text" id="filter-input" onkeyup="applyFilter()" placeholder="Ingrese el número de parte a filtrar">
             </div>
             {% for refaccion in refacciones %}
             <div class="record-container" data-id="{{ refaccion.ID }}">
@@ -240,11 +219,12 @@
         </div>
     </div>
     <script>
+        // Eliminar registro
         function eliminarRegistro(button) {
             const recordContainer = button.closest('.record-container');
             const id = recordContainer.dataset.id;
             
-            fetch('/eliminar', {
+            fetch(`/eliminar_registro/${id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -252,7 +232,9 @@
                 body: JSON.stringify({ id: id }) // Enviar el ID como JSON
             }).then(response => {
                 if (response.ok) {
+                    // Si la respuesta es ok, elimina el registro visualmente
                     recordContainer.remove();
+                    alert('Registro eliminado con éxito.');
                 } else {
                     alert('Error al eliminar el registro.');
                 }
@@ -260,7 +242,6 @@
                 console.error('Error:', error);
             });
         }
-
 
         function toggleModificar(button) {
             const recordContainer = button.closest('.record-container');
@@ -296,13 +277,17 @@
         }
 
         function applyFilter() {
-            const filterInput = document.getElementById('filter-input').value.toLowerCase();
-            const filterCategory = document.getElementById('filter-category').value;
-            const records = document.querySelectorAll('.record-container');
+            const input = document.getElementById('filter-input');
+            const filter = input.value.toLowerCase();
+            const recordContainers = document.querySelectorAll('.record-container');
 
-            records.forEach(record => {
-                const textToMatch = record.querySelector(`.${filterCategory.toLowerCase()}`).textContent.toLowerCase();
-                record.style.display = textToMatch.includes(filterInput) ? 'block' : 'none';
+            recordContainers.forEach(container => {
+                const numParte = container.querySelector('.num-parte').textContent.toLowerCase();
+                if (numParte.includes(filter)) {
+                    container.style.display = ''; // Mostrar si coincide
+                } else {
+                    container.style.display = 'none'; // Ocultar si no coincide
+                }
             });
         }
 

@@ -132,31 +132,17 @@ def modificar_registro(id):
     except Exception as e:
         return alert_message(f"Error al modificar el registro: {str(e)}")
 
-@app.route('/eliminar', methods=['POST'])
-def eliminar_registro():
+@app.route('/eliminar_registro/<int:id>', methods=['POST'])
+def eliminar_registro(id):
     try:
-        # Obtener el ID del registro desde el cuerpo de la solicitud
-        data = request.get_json()  # Se espera que el cuerpo sea en formato JSON
-        id = data.get('id')  # Obtener el ID
-
-        if id is None:
-            return alert_message("ID no proporcionado")
-
-        with DATABASE.connection() as connection:
-            cursor = connection.cursor()
-            # Verificar si el registro existe antes de intentar eliminarlo
-            cursor.execute('SELECT * FROM refacciones WHERE ID = %s', (id,))
-            if cursor.fetchone() is None:
-                return alert_message("Registro no encontrado")
-            
-            # Intentar eliminar el registro
-            cursor.execute('DELETE FROM refacciones WHERE ID = %s', (id,))
-            connection.commit()
-
-        return alert_message("Registro eliminado con éxito")
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM refacciones WHERE ID = ?", (id,))
+        conn.commit()
+        conn.close()
+        return alert_message("Registro eliminado con éxito", redirect_url='/')  # Redireccionar a la página principal
     except Exception as e:
         return alert_message(f"Error al eliminar el registro: {str(e)}")
-
 
 @app.route('/insertar_data', methods=['GET', 'POST'])
 def insertar():

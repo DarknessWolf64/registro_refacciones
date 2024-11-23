@@ -13,7 +13,7 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: row; /* Adjusted to row to accommodate sidebar */
+            flex-direction: row;
             height: 100vh;
         }
         .navbar {
@@ -25,7 +25,7 @@
             justify-content: flex-start;
             border-radius: 10px;
             margin: 20px;
-            height: calc(100vh - 40px); /* Adjust to leave space for top/bottom padding */
+            height: calc(100vh - 40px);
         }
         .navbar a {
             color: #E94560;
@@ -48,8 +48,8 @@
             align-items: center;
             justify-content: flex-start;
             padding: 20px;
-            margin-left: 20px; /* Space for the navbar */
-            width: calc(100% - 260px); /* Adjust width to account for navbar */
+            margin-left: 20px;
+            width: calc(100% - 260px);
         }
         h1 {
             text-align: center;
@@ -61,17 +61,28 @@
         }
         .chart-container {
             width: 500px;
-            height: 500px;
             margin-top: 20px;
             border-radius: 10px;
             background-color: #1F4068;
             padding: 20px;
+            text-align: center;
         }
         canvas {
             width: 100%;
-            height: 100%;
+            height: 300px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .average-box {
+            width: 500px;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #162447;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: #E94560;
+            font-size: 1.2rem;
         }
     </style>
 </head>
@@ -84,47 +95,153 @@
     </div>
     <div class="content">
         <h1>Dashboard</h1>
+        <!-- Gráficas -->
         <div class="chart-container">
-            <canvas id="myChart"></canvas>
+            <h3>Costo de Lista y Costo de Instalación</h3>
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Tendencia del Costo de Lista y Total con IVA</h3>
+            <canvas id="lineChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Distribución del Costo de Lista</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Distribución de Costos Lista e Instalación</h3>
+            <canvas id="radarChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Distribución de Instalación</h3>
+            <canvas id="doughnutChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Distribución de Totales con IVA</h3>
+            <canvas id="polarAreaChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Relación entre Costo de Lista y Total con IVA</h3>
+            <canvas id="scatterChart"></canvas>
+        </div>
+        <!-- Promedio -->
+        <div class="average-box" id="averageBox">
+            Promedios: Calculando...
         </div>
     </div>
     
     <script>
-        function renderChart() {
-            // Obtener datos de refacciones pasados desde Flask
+        function renderCharts() {
+            // Datos de ejemplo
             const refacciones = JSON.parse('{{ refacciones | tojson | safe }}');
             
-            // Preparar datos para el gráfico
-            const labels = refacciones.map(refaccion => refaccion.NUMERO_DE_PARTE);
-            const data = {
-                labels: labels,
-                datasets: [{
-                    label: 'Costo Lista',
-                    data: refacciones.map(refaccion => refaccion.COSTO_LISTA),
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            };
+            const labels = refacciones.map(r => r.NUMERO_DE_PARTE);
+            const costos = refacciones.map(r => r.COSTO_LISTA);
+            const instalaciones = refacciones.map(r => r.COSTO_INSTALACION);
+            const totales = refacciones.map(r => r.TOTAL_CON_IVA);
 
-            // Configurar y renderizar el gráfico
-            const config = {
+            // Calcular promedios
+            const avgCostoLista = (costos.reduce((a, b) => a + b, 0) / costos.length).toFixed(2);
+            const avgInstalacion = (instalaciones.reduce((a, b) => a + b, 0) / instalaciones.length).toFixed(2);
+            const avgTotalIVA = (totales.reduce((a, b) => a + b, 0) / totales.length).toFixed(2);
+
+            // Mostrar promedios
+            document.getElementById('averageBox').innerText = `
+                Promedio Costo Lista: ${avgCostoLista}
+                Promedio Instalación: ${avgInstalacion}
+                Promedio Total con IVA: ${avgTotalIVA}
+            `;
+
+            // Gráfica de barras
+            new Chart(document.getElementById('barChart').getContext('2d'), {
                 type: 'bar',
-                data: data,
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            };
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Costo Lista', data: costos, backgroundColor: 'rgba(75, 192, 192, 0.6)' },
+                        { label: 'Costo Instalación', data: instalaciones, backgroundColor: 'rgba(255, 159, 64, 0.6)' }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
 
-            const ctx = document.getElementById('myChart').getContext('2d');
-            new Chart(ctx, config);
+            // Gráfica de líneas
+            new Chart(document.getElementById('lineChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Costo Lista', data: costos, borderColor: '#FF6384', backgroundColor: 'rgba(255, 99, 132, 0.2)' },
+                        { label: 'Total con IVA', data: totales, borderColor: '#36A2EB', backgroundColor: 'rgba(54, 162, 235, 0.2)' }
+                    ]
+                },
+                options: { responsive: true }
+            });
+
+            // Gráfica de pastel
+            new Chart(document.getElementById('pieChart').getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels,
+                    datasets: [{ data: costos, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }]
+                },
+                options: { responsive: true }
+            });
+
+            // Gráfica de radar
+            new Chart(document.getElementById('radarChart').getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Costo Lista', data: costos, borderColor: '#FF6384', backgroundColor: 'rgba(255, 99, 132, 0.2)' },
+                        { label: 'Costo Instalación', data: instalaciones, borderColor: '#36A2EB', backgroundColor: 'rgba(54, 162, 235, 0.2)' }
+                    ]
+                },
+                options: { responsive: true }
+            });
+
+            // Gráfica de dona
+            new Chart(document.getElementById('doughnutChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{ data: instalaciones, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }]
+                },
+                options: { responsive: true }
+            });
+
+            // Gráfica de área polar
+            new Chart(document.getElementById('polarAreaChart').getContext('2d'), {
+                type: 'polarArea',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            data: totales,
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                        }
+                    ]
+                },
+                options: { responsive: true }
+            });
+
+            // Gráfica de dispersión (Scatter)
+            new Chart(document.getElementById('scatterChart').getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Costo Lista vs Total con IVA',
+                        data: costos.map((v, i) => ({ x: v, y: totales[i] })),
+                        backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                        pointRadius: 5
+                    }]
+                },
+                options: { responsive: true }
+            });
         }
 
-        window.onload = renderChart;
+        window.onload = renderCharts;
     </script>
 </body>
 </html>
